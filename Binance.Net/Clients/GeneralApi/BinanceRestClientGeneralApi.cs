@@ -47,7 +47,7 @@ namespace Binance.Net.Clients.GeneralApi
 
         #region constructor/destructor
 
-        internal BinanceRestClientGeneralApi(ILogger logger, HttpClient? httpClient, BinanceRestClient baseClient, BinanceRestOptions options) 
+        public BinanceRestClientGeneralApi(ILogger logger, HttpClient? httpClient, BinanceRestClient baseClient, BinanceRestOptions options) 
             : base(logger, httpClient, options.Environment.SpotRestAddress, options, options.SpotOptions)
         {
             _baseClient = baseClient;

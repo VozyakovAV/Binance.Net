@@ -60,7 +60,7 @@ namespace Binance.Net.Clients.CoinFuturesApi
         public event Action<OrderId>? OnOrderCanceled;
 
         #region constructor/destructor
-        internal BinanceRestClientCoinFuturesApi(ILogger logger, HttpClient? httpClient, BinanceRestOptions options)
+        public BinanceRestClientCoinFuturesApi(ILogger logger, HttpClient? httpClient, BinanceRestOptions options)
             : base(logger, httpClient, options.Environment.CoinFuturesRestAddress!, options, options.CoinFuturesOptions)
         {
             Account = new BinanceRestClientCoinFuturesApiAccount(this);

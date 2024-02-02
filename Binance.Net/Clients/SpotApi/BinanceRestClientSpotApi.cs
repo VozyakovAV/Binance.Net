@@ -62,7 +62,7 @@ namespace Binance.Net.Clients.SpotApi
         public event Action<OrderId>? OnOrderCanceled;
 
         #region constructor/destructor
-        internal BinanceRestClientSpotApi(ILogger logger, HttpClient? httpClient, BinanceRestOptions options)
+        public BinanceRestClientSpotApi(ILogger logger, HttpClient? httpClient, BinanceRestOptions options)
             : base(logger, httpClient, options.Environment.SpotRestAddress, options, options.SpotOptions)
         {
             Account = new BinanceRestClientSpotApiAccount(this);
