@@ -1,10 +1,7 @@
 ﻿using Binance.Net.Interfaces;
 using Binance.Net.Interfaces.Clients;
 using Binance.Net.Objects.Options;
-using CryptoExchange.Net.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using System;
 
 namespace Binance.Net.SymbolOrderBooks
 {
@@ -28,7 +25,7 @@ namespace Binance.Net.SymbolOrderBooks
         public ISymbolOrderBook CreateSpot(string symbol, Action<BinanceOrderBookOptions>? options = null)
             => new BinanceSpotSymbolOrderBook(symbol,
                                              options,
-                                             _serviceProvider.GetRequiredService<ILogger<BinanceSpotSymbolOrderBook>>(),
+                                             _serviceProvider.GetRequiredService<ILoggerFactory>(),
                                              _serviceProvider.GetRequiredService<IBinanceRestClient>(),
                                              _serviceProvider.GetRequiredService<IBinanceSocketClient>());
 
@@ -37,7 +34,7 @@ namespace Binance.Net.SymbolOrderBooks
         public ISymbolOrderBook CreateUsdtFutures(string symbol, Action<BinanceOrderBookOptions>? options = null)
             => new BinanceFuturesUsdtSymbolOrderBook(symbol,
                                              options,
-                                             _serviceProvider.GetRequiredService<ILogger<BinanceFuturesUsdtSymbolOrderBook>>(),
+                                             _serviceProvider.GetRequiredService<ILoggerFactory>(),
                                              _serviceProvider.GetRequiredService<IBinanceRestClient>(),
                                              _serviceProvider.GetRequiredService<IBinanceSocketClient>());
 
@@ -46,7 +43,7 @@ namespace Binance.Net.SymbolOrderBooks
         public ISymbolOrderBook CreateCoinFutures(string symbol, Action<BinanceOrderBookOptions>? options = null)
             => new BinanceFuturesCoinSymbolOrderBook(symbol,
                                              options,
-                                             _serviceProvider.GetRequiredService<ILogger<BinanceFuturesCoinSymbolOrderBook>>(),
+                                             _serviceProvider.GetRequiredService<ILoggerFactory>(),
                                              _serviceProvider.GetRequiredService<IBinanceRestClient>(),
                                              _serviceProvider.GetRequiredService<IBinanceSocketClient>());
     }

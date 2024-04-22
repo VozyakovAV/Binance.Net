@@ -1,8 +1,5 @@
-﻿using System;
-using Binance.Net.Converters;
+﻿using Binance.Net.Converters;
 using Binance.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
 
 namespace Binance.Net.Objects.Models.Spot.Margin
 {
@@ -28,6 +25,11 @@ namespace Binance.Net.Objects.Models.Spot.Margin
         /// Principal repaid 
         /// </summary>
         public decimal Principal { get; set; }
+        /// <summary>
+        /// Quantity repaid 
+        /// </summary>
+        [JsonProperty("amount")]
+        public decimal Quantity { get; set; }
         /// <summary>
         /// Time of repay completed
         /// </summary>

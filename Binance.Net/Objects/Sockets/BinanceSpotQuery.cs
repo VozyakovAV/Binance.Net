@@ -1,10 +1,6 @@
 ﻿using Binance.Net.Objects.Internal;
-using CryptoExchange.Net.Objects;
 using CryptoExchange.Net.Objects.Sockets;
 using CryptoExchange.Net.Sockets;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace Binance.Net.Objects.Sockets
 {
@@ -17,23 +13,23 @@ namespace Binance.Net.Objects.Sockets
             ListenerIdentifiers = new HashSet<string> { request.Id.ToString() };
         }
 
-        public override Task<CallResult<T>> HandleMessageAsync(SocketConnection connection, DataEvent<T> message)
+        public override CallResult<T> HandleMessage(SocketConnection connection, DataEvent<T> message)
         {
             if (message.Data.Status != 200)
             {
-                if (message.Data.Status == 419 || message.Data.Status == 428)
+                if (message.Data.Status == 418 || message.Data.Status == 429)
                 {
                     // Rate limit error 
-                    return Task.FromResult(new CallResult<T>(new BinanceRateLimitError(message.Data.Error!.Code, message.Data.Error!.Message, null)
+                    return new CallResult<T>(new BinanceRateLimitError(message.Data.Error!.Code, message.Data.Error!.Message, null)
                     {
                         RetryAfter = message.Data.Error.Data!.RetryAfter
-                    }, message.OriginalData));
+                    }, message.OriginalData);
                 }
 
-                return Task.FromResult(new CallResult<T>(new ServerError(message.Data.Error!.Code, message.Data.Error!.Message), message.OriginalData));
+                return new CallResult<T>(new ServerError(message.Data.Error!.Code, message.Data.Error!.Message), message.OriginalData);
             }
 
-            return Task.FromResult(new CallResult<T>(message.Data, message.OriginalData, null));
+            return new CallResult<T>(message.Data, message.OriginalData, null);
         }
     }
 }

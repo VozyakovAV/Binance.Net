@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
-using Binance.Net.Enums;
+﻿using Binance.Net.Enums;
 using Binance.Net.Objects.Models;
 using Binance.Net.Objects.Models.Futures.AlgoOrders;
 using Binance.Net.Objects.Models.Spot;
 using Binance.Net.Objects.Models.Spot.Blvt;
-using Binance.Net.Objects.Models.Spot.BSwap;
 using Binance.Net.Objects.Models.Spot.Convert;
 using Binance.Net.Objects.Models.Spot.ConvertTransfer;
 using Binance.Net.Objects.Models.Spot.Margin;
-using CryptoExchange.Net.Objects;
 
 namespace Binance.Net.Interfaces.Clients.SpotApi
 {
@@ -39,10 +33,11 @@ namespace Binance.Net.Interfaces.Clients.SpotApi
         /// <param name="strategyId">Strategy id</param>
         /// <param name="strategyType">Strategy type</param>
         /// <param name="selfTradePreventionMode">Self trade prevention mode</param>
+        /// <param name="computeFeeRates">Whether fee rates should be calculated or not</param>
         /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
         /// <param name="ct">Cancellation token</param>
-        /// <returns>Id's for the placed test order</returns>
-        Task<WebCallResult<BinancePlacedOrder>> PlaceTestOrderAsync(string symbol,
+        /// <returns>Fee info if computeCommissionRates was set to true, else empty</returns>
+        Task<WebCallResult<BinanceTestOrderCommission>> PlaceTestOrderAsync(string symbol,
             OrderSide side,
             SpotOrderType type,
             decimal? quantity = null,
@@ -57,6 +52,7 @@ namespace Binance.Net.Interfaces.Clients.SpotApi
             int? strategyId = null,
             int? strategyType = null,
             SelfTradePreventionMode? selfTradePreventionMode = null,
+            bool? computeFeeRates = null,
             int? receiveWindow = null,
             CancellationToken ct = default);
 
@@ -208,7 +204,7 @@ namespace Binance.Net.Interfaces.Clients.SpotApi
         Task<WebCallResult<IEnumerable<BinanceOrder>>> GetOrdersAsync(string symbol, long? orderId = null, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default);
 
         /// <summary>
-        /// Places a new OCO(One cancels other) order
+        /// DEPRECATED, USE PlaceOcoOrderListAsync INSTEAD
         /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#new-oco-trade" /></para>
         /// </summary>
         /// <param name="symbol">The symbol the order is for</param>
@@ -249,6 +245,64 @@ namespace Binance.Net.Interfaces.Clients.SpotApi
             int? limitStrategyType = null,
             int? stopStrategyId = null,
             int? stopStrategyType = null,
+            SelfTradePreventionMode? selfTradePreventionMode = null,
+            int? receiveWindow = null,
+            CancellationToken ct = default);
+
+        /// <summary>
+        /// Place a new OCO order. An OCO has 2 legs called the above leg and below leg. One of the legs must be a LimitMaker order and the other leg must be StopLoss or StopLossLimit order.
+        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#new-order-list-oco-trade" /></para>
+        /// </summary>
+        /// <param name="symbol">The symbol the order is for</param>
+        /// <param name="side">The order side (buy/sell)</param>
+        /// <param name="quantity">The quantity of the symbol</param>
+        /// <param name="aboveOrderType">The above leg order type</param>
+        /// <param name="belowOrderType">The below leg order type</param>
+        /// <param name="aboveClientOrderId">Client order id for the above leg</param>
+        /// <param name="aboveIcebergQuantity">Ice berg quantity for the above leg</param>
+        /// <param name="abovePrice">Limit price for the above leg</param>
+        /// <param name="aboveStopPrice">Stop price for the above leg</param>
+        /// <param name="aboveTrailingDelta">Trailing delta for the above leg</param>
+        /// <param name="aboveTimeInForce">Time in force for the above leg</param>
+        /// <param name="aboveStrategyId">Strategy id for the above leg</param>
+        /// <param name="aboveStrategyType">Strategy type for the above leg</param>
+        /// <param name="belowClientOrderId">Client order id for the below leg</param>
+        /// <param name="belowIcebergQuantity">Ice berg quantity for the below leg</param>
+        /// <param name="belowPrice">Limit price for the below leg</param>
+        /// <param name="belowStopPrice">Stop price for the below leg</param>
+        /// <param name="belowTrailingDelta">Trailing delta for the below leg</param>
+        /// <param name="belowTimeInForce">Time in force for the below leg</param>
+        /// <param name="belowStrategyId">Strategy id for the below leg</param>
+        /// <param name="belowStrategyType">Strategy type for the below leg</param>
+        /// <param name="selfTradePreventionMode">Self trade prevention mode</param>
+        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
+        /// <param name="ct">Cancellation token</param>
+        /// <returns></returns>
+        Task<WebCallResult<BinanceOrderOcoList>> PlaceOcoOrderListAsync(
+            string symbol,
+            OrderSide side,
+            decimal quantity,
+            SpotOrderType aboveOrderType,
+            SpotOrderType belowOrderType,
+
+            string? aboveClientOrderId = null,
+            decimal? aboveIcebergQuantity = null,
+            decimal? abovePrice = null,
+            decimal? aboveStopPrice = null,
+            decimal? aboveTrailingDelta = null,
+            TimeInForce? aboveTimeInForce = null,
+            int? aboveStrategyId = null,
+            int? aboveStrategyType = null,
+
+            string? belowClientOrderId = null,
+            decimal? belowIcebergQuantity = null,
+            decimal? belowPrice = null,
+            decimal? belowStopPrice = null,
+            decimal? belowTrailingDelta = null,
+            TimeInForce? belowTimeInForce = null,
+            int? belowStrategyId = null,
+            int? belowStrategyType = null,
+
             SelfTradePreventionMode? selfTradePreventionMode = null,
             int? receiveWindow = null,
             CancellationToken ct = default);
@@ -579,157 +633,6 @@ namespace Binance.Net.Interfaces.Clients.SpotApi
         /// <param name="ct">Cancellation token</param>
         /// <returns></returns>
         Task<WebCallResult<IEnumerable<BinanceBlvtRedemption>>> GetLeveragedTokensRedemptionRecordsAsync(string? tokenName = null, long? id = null, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Add liquidity to a pool
-        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#add-liquidity-trade" /></para>
-        /// </summary>
-        /// <param name="poolId">The pool</param>
-        /// <param name="asset">The asset</param>
-        /// <param name="type">Add type</param>
-        /// <param name="quantity">Quantity to add</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<BinanceBSwapOperationResult>> AddToLiquidityPoolAsync(int poolId, string asset, decimal quantity, LiquidityType? type = null, int? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Remove liquidity from a pool
-        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#remove-liquidity-trade" /></para>
-        /// </summary>
-        /// <param name="poolId">The pool</param>
-        /// <param name="asset">The asset</param>
-        /// <param name="type">Remove type</param>
-        /// <param name="shareQuantity">Quantity to remove</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<BinanceBSwapOperationResult>> RemoveFromLiquidityPoolAsync(int poolId, string asset, LiquidityType type, decimal shareQuantity, int? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Get liquidity operation records
-        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-liquidity-operation-record-user_data" /></para>
-        /// </summary>
-        /// <param name="operationId">Filter by operationId</param>
-        /// <param name="poolId">Filter by poolId</param>
-        /// <param name="operation">Filter by operation</param>
-        /// <param name="startTime">Filter by start time</param>
-        /// <param name="endTime">Filter by end time</param>
-        /// <param name="limit">Max number of results</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<IEnumerable<BinanceBSwapOperation>>> GetLiquidityPoolOperationRecordsAsync(long? operationId = null, int? poolId = null, BSwapOperation? operation = null, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Request a quote for swap quote asset (selling asset) for base asset (buying asset), essentially price/exchange rates. quoteQty is quantity of quote asset(to sell).
-        /// Please be noted the quote is for reference only, the actual price will change as the liquidity changes, it's recommended to swap immediate after request a quote for slippage prevention.
-        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#request-quote-user_data" /></para>
-        /// </summary>
-        /// <param name="quoteAsset">Quote asset</param>
-        /// <param name="baseAsset">Base asset</param>
-        /// <param name="quoteQuantity">Quote quantity</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<BinanceBSwapQuote>> GetLiquidityPoolSwapQuoteAsync(string quoteAsset, string baseAsset, decimal quoteQuantity, int? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Swap quote asset for base asset
-        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#swap-trade" /></para>
-        /// </summary>
-        /// <param name="quoteAsset">Quote asset</param>
-        /// <param name="baseAsset">Base asset</param>
-        /// <param name="quoteQuantity">Quote quantity</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<BinanceBSwapResult>> LiquidityPoolSwapAsync(string quoteAsset, string baseAsset, decimal quoteQuantity, int? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Get swap history records
-        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-swap-history-user_data" /></para>
-        /// </summary>
-        /// <param name="swapId">Filter by swapId</param>
-        /// <param name="status">Filter by status</param>
-        /// <param name="quoteAsset">Filter by quote asset</param>
-        /// <param name="baseAsset">Filter by base asset</param>
-        /// <param name="startTime">Filter by start time</param>
-        /// <param name="endTime">Filter by end time</param>
-        /// <param name="limit">Max number of results</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<IEnumerable<BinanceBSwapRecord>>> GetLiquidityPoolSwapHistoryAsync(long? swapId = null, BSwapStatus? status = null, string? quoteAsset = null, string? baseAsset = null, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default);
-
-
-        /// <summary>
-        /// Calculate expected share quantity for adding liquidity in single or dual token.
-        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#add-liquidity-preview-user_data" /></para>
-        /// </summary>
-        /// <param name="poolId">The pool</param>
-        /// <param name="asset">The asset</param>
-        /// <param name="quantity">Quantity to add</param>
-        /// <param name="type">Add type</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<BinanceBSwapPreviewResult>> AddToLiquidityPoolPreviewAsync(int poolId, string asset, decimal quantity, LiquidityType type, int? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Calculate expected share quantity for removing liquidity in single or dual token.
-        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#remove-liquidity-preview-user_data" /></para>
-        /// </summary>
-        /// <param name="poolId">The pool</param>
-        /// <param name="asset">The asset</param>
-        /// <param name="quantity">Quantity to add</param>
-        /// <param name="type">Add type</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<BinanceBSwapPreviewResult>> RemoveFromLiquidityPoolPreviewAsync(int poolId, string asset, decimal quantity, LiquidityType type, int? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Get liquidity info for a pool
-        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-liquidity-information-of-a-pool-user_data" /></para>
-        /// </summary>
-        /// <param name="poolId">Get a specific pool</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<IEnumerable<BinanceBSwapPoolLiquidity>>> GetLiquidityPoolInfoAsync(int? poolId = null, int? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Get unclaimed rewards 
-        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-unclaimed-rewards-record-user_data" /></para>
-        /// </summary>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<BinanceBSwapUnclaimedRewards>> GetUnclaimedLiquidityPoolsRewardsAsync(int? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Claim liquidity pool rewards
-        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#claim-rewards-trade" /></para>
-        /// </summary>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<BinanceBSwapClaimResult>> ClaimLiquidityPoolsRewardsAsync(int? receiveWindow = null, CancellationToken ct = default);
-
-        /// <summary>
-        /// Get claimed rewards history
-        /// <para><a href="https://binance-docs.github.io/apidocs/spot/en/#get-claimed-history-user_data" /></para>
-        /// </summary>
-        /// <param name="poolId">Filter by pool id</param>
-        /// <param name="asset">Filter by asset</param>
-        /// <param name="startTime">Filter by start time</param>
-        /// <param name="endTime">Filter by end time</param>
-        /// <param name="limit">Max number of results</param>
-        /// <param name="receiveWindow">The receive window for which this request is active. When the request takes longer than this to complete the server will reject the request</param>
-        /// <param name="ct">Cancellation token</param>
-        /// <returns></returns>
-        Task<WebCallResult<IEnumerable<BinanceBSwapRewardHistory>>> GetLiquidityPoolsClaimHistoryAsync(long? poolId = null, string? asset = null, DateTime? startTime = null, DateTime? endTime = null, int? limit = null, int? receiveWindow = null, CancellationToken ct = default);
 
         /// <summary>
         /// Get Customer to Customer trade history

@@ -1,16 +1,10 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
-using System.Threading.Tasks;
-using System.Threading;
-using Binance.Net.Objects.Models.Spot.Socket;
-using CryptoExchange.Net;
-using CryptoExchange.Net.Objects;
-using System.Collections.Generic;
+﻿using Binance.Net.Objects.Models.Spot.Socket;
 using Binance.Net.Objects.Models.Spot;
 using Binance.Net.Interfaces.Clients.SpotApi;
 using Binance.Net.Objects;
 using CryptoExchange.Net.Objects.Sockets;
 using Binance.Net.Objects.Sockets.Subscriptions;
+using Binance.Net.Objects.Models;
 
 namespace Binance.Net.Clients.SpotApi
 {
@@ -36,10 +30,10 @@ namespace Binance.Net.Clients.SpotApi
         #region Get Account Info
 
         /// <inheritdoc />
-        public async Task<CallResult<BinanceResponse<BinanceAccountInfo>>> GetAccountInfoAsync(IEnumerable<string>? symbols = null)
+        public async Task<CallResult<BinanceResponse<BinanceAccountInfo>>> GetAccountInfoAsync(bool? omitZeroBalances = null)
         {
             var parameters = new Dictionary<string, object>();
-            parameters.AddOptionalParameter("symbols", symbols);
+            parameters.AddOptionalParameter("omitZeroBalances", omitZeroBalances?.ToString().ToLowerInvariant());
             return await _client.QueryAsync<BinanceAccountInfo>(_client.ClientOptions.Environment.SpotSocketApiAddress.AppendPath("ws-api/v3"), $"account.status", parameters, true, true, weight: 20).ConfigureAwait(false);
         }
 
@@ -87,7 +81,7 @@ namespace Binance.Net.Clients.SpotApi
 
         #endregion
 
-        #region Start User Stream
+        #region Stop User Stream
 
         /// <inheritdoc />
         public async Task<CallResult<BinanceResponse<object>>> StopUserStreamAsync(string listenKey)
@@ -112,10 +106,11 @@ namespace Binance.Net.Clients.SpotApi
             Action<DataEvent<BinanceStreamOrderList>>? onOcoOrderUpdateMessage = null,
             Action<DataEvent<BinanceStreamPositionsUpdate>>? onAccountPositionMessage = null,
             Action<DataEvent<BinanceStreamBalanceUpdate>>? onAccountBalanceUpdate = null,
+            Action<DataEvent<BinanceStreamEvent>>? onListenKeyExpired = null,
             CancellationToken ct = default)
         {
             listenKey.ValidateNotNull(nameof(listenKey));
-            var subscription = new BinanceSpotUserDataSubscription(_logger, new List<string> { listenKey }, onOrderUpdateMessage, onOcoOrderUpdateMessage, onAccountPositionMessage, onAccountBalanceUpdate, false);
+            var subscription = new BinanceSpotUserDataSubscription(_logger, new List<string> { listenKey }, onOrderUpdateMessage, onOcoOrderUpdateMessage, onAccountPositionMessage, onAccountBalanceUpdate, onListenKeyExpired, false);
             return await _client.SubscribeInternalAsync(_client.BaseAddress, subscription, ct).ConfigureAwait(false);
         }
         #endregion

@@ -1,5 +1,4 @@
-﻿using CryptoExchange.Net;
-using Binance.Net.Interfaces.Clients;
+﻿using Binance.Net.Interfaces.Clients;
 using Binance.Net.Interfaces.Clients.UsdFuturesApi;
 using Binance.Net.Interfaces.Clients.SpotApi;
 using Binance.Net.Interfaces.Clients.GeneralApi;
@@ -8,12 +7,8 @@ using Binance.Net.Clients.GeneralApi;
 using Binance.Net.Clients.SpotApi;
 using Binance.Net.Clients.UsdFuturesApi;
 using Binance.Net.Clients.CoinFuturesApi;
-using Microsoft.Extensions.Logging;
-using System.Net.Http;
-using System;
 using Binance.Net.Objects.Options;
-using CryptoExchange.Net.Authentication;
-using Microsoft.Extensions.DependencyInjection;
+using CryptoExchange.Net.Clients;
 
 namespace Binance.Net.Clients
 {

@@ -19,10 +19,11 @@ namespace Binance.Net.UnitTests.TestImplementations
 #pragma warning disable 0067
         public event Func<Task> OnReconnected;
         public event Func<Task> OnReconnecting;
+        public event Func<int, Task> OnRequestRateLimited;
         public event Func<Exception, Task> OnError;
 #pragma warning restore 0067
         public event Func<int, Task> OnRequestSent;
-        public event Func<WebSocketMessageType, Stream, Task> OnStreamMessage;
+        public event Action<WebSocketMessageType, ReadOnlyMemory<byte>> OnStreamMessage;
         public event Func<Task> OnOpen;
 
         public int Id { get; }
@@ -48,10 +49,10 @@ namespace Binance.Net.UnitTests.TestImplementations
         public TimeSpan KeepAliveInterval { get; set; }
         public Func<Task<Uri>> GetReconnectionUrl { get; set; }
 
-        public Task<bool> ConnectAsync()
+        public Task<CallResult> ConnectAsync()
         {
             Connected = CanConnect;
-            return Task.FromResult(CanConnect);
+            return Task.FromResult(CanConnect ? new CallResult(null) : new CallResult(new CantConnectError()));
         }
 
         public void Send(int requestId, string data, int weight)
@@ -92,16 +93,14 @@ namespace Binance.Net.UnitTests.TestImplementations
             OnOpen?.Invoke();
         }
 
-        public async Task InvokeMessage(string data)
+        public void InvokeMessage(string data)
         {
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(data));
-            await OnStreamMessage?.Invoke(WebSocketMessageType.Text, stream);
+            OnStreamMessage?.Invoke(WebSocketMessageType.Text, new ReadOnlyMemory<byte>(Encoding.UTF8.GetBytes(data)));
         }
 
-        public async Task InvokeMessage<T>(T data)
+        public void InvokeMessage<T>(T data)
         {
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data)));
-            await OnStreamMessage?.Invoke(WebSocketMessageType.Text, stream);
+            OnStreamMessage?.Invoke(WebSocketMessageType.Text, new ReadOnlyMemory<byte>(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(data))));
         }
 
         public void SetProxy(ApiProxy proxy)

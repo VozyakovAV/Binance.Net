@@ -2,7 +2,7 @@
 
 [![.NET](https://img.shields.io/github/actions/workflow/status/JKorf/Binance.Net/dotnet.yml?style=for-the-badge)](https://github.com/JKorf/Binance.Net/actions/workflows/dotnet.yml) ![License](https://img.shields.io/github/license/JKorf/Binance.Net?style=for-the-badge)
 
-Binance.Net is a client library for accessing the [Binance REST and Websocket API](https://binance-docs.github.io/apidocs/#change-log). All data is mapped to readable models and enum values. Additional features include an implementation for maintaining a client side order book, easy integration with other exchange client libraries and more.
+Binance.Net is a strongly typed client library for accessing the [Binance REST and Websocket API](https://binance-docs.github.io/apidocs/#change-log). All data is mapped to readable models and enum values. Additional features include an implementation for maintaining a client side order book, easy integration with other exchange client libraries and more.
 
 ## Supported Frameworks
 The library is targeting both `.NET Standard 2.0` and `.NET Standard 2.1` for optimal compatibility
@@ -47,7 +47,7 @@ var tickerSubscriptionResult = socketClient.SpotApi.ExchangeData.SubscribeToTick
 
 <img src="https://github.com/JKorf/Binance.Net/blob/f74f262151f21b123deecd9b39a717458a18f6ff/docs/Binance.gif" width="600" />
 
-For information on the clients, dependency injection, response processing and more see the [documentation](https://jkorf.github.io/CryptoExchange.Net), or have a look at the examples [here](https://github.com/JKorf/Binance.Net/tree/master/Examples) or [here](https://github.com/JKorf/CryptoExchange.Net/tree/master/Examples).
+For information on the clients, dependency injection, response processing and more see the [Binance.Net documentation](https://jkorf.github.io/Binance.Net), [CryptoExchange.Net documentation](https://jkorf.github.io/CryptoExchange.Net), or have a look at the examples [here](https://github.com/JKorf/Binance.Net/tree/master/Examples) or [here](https://github.com/JKorf/CryptoExchange.Net/tree/master/Examples).
 
 ## CryptoExchange.Net
 Binance.Net is based on the [CryptoExchange.Net](https://github.com/JKorf/CryptoExchange.Net) base library. Other exchange API implementations based on the CryptoExchange.Net base library are available and follow the same logic.
@@ -56,6 +56,7 @@ CryptoExchange.Net also allows for [easy access to different exchange API's](htt
 
 |Exchange|Repository|Nuget|
 |--|--|--|
+|BingX|[JKorf/BingX.Net](https://github.com/JKorf/BingX.Net)|[![Nuget version](https://img.shields.io/nuget/v/JK.BingX.net.svg?style=flat-square)](https://www.nuget.org/packages/JK.BingX.Net)|
 |Bitfinex|[JKorf/Bitfinex.Net](https://github.com/JKorf/Bitfinex.Net)|[![Nuget version](https://img.shields.io/nuget/v/Bitfinex.net.svg?style=flat-square)](https://www.nuget.org/packages/Bitfinex.Net)|
 |Bitget|[JKorf/Bitget.Net](https://github.com/JKorf/Bitget.Net)|[![Nuget version](https://img.shields.io/nuget/v/JK.Bitget.net.svg?style=flat-square)](https://www.nuget.org/packages/JK.Bitget.Net)|
 |Bybit|[JKorf/Bybit.Net](https://github.com/JKorf/Bybit.Net)|[![Nuget version](https://img.shields.io/nuget/v/Bybit.net.svg?style=flat-square)](https://www.nuget.org/packages/Bybit.Net)|
@@ -85,7 +86,7 @@ A Discord server is available [here](https://discord.gg/MSpeEtSY8t). For discuss
 |Margin Account/Trade|Partial|`restClient.SpotApi.Account` / `restClient.SpotApi.Trading`|
 |User Data Streams|✓|`socketClient.SpotApi.Account`|
 |Margin User Data Streams|X||
-|Simple Earn Endpoints|Outdated||
+|Simple Earn Endpoints|✓|`restClient.GeneralApi.SimpleEarn`|
 |Auto-Invest Endpoints|X||
 |Staking Endpoints|✓|`restClient.GeneralApi.Staking`|
 |Mining Endpoints|✓|`restClient.GeneralApi.Mining`|
@@ -145,13 +146,62 @@ I develop and maintain this package on my own for free in my spare time, any sup
 ### Donate
 Make a one time donation in a crypto currency of your choice. If you prefer to donate a currency not listed here please contact me.
 
-**Btc**:  bc1qz0jv0my7fc60rxeupr23e75x95qmlq6489n8gh  
-**Eth**:  0xcb1b63aCF9fef2755eBf4a0506250074496Ad5b7  
+**Btc**:  bc1q277a5n54s2l2mzlu778ef7lpkwhjhyvghuv8qf  
+**Eth**:  0xcb1b63aCF9fef2755eBf4a0506250074496Ad5b7   
+**USDT (TRX)**  TKigKeJPXZYyMVDgMyXxMf17MWYia92Rjd
 
 ### Sponsor
 Alternatively, sponsor me on Github using [Github Sponsors](https://github.com/sponsors/JKorf). 
 
 ## Release notes
+* Version 9.9.2 - 19 Apr 2024
+    * Added CoinFuturesApi.Account.GetDownloadIdForTransactionHistoryAsync endpoint
+    * Added CoinFuturesApi.Account.GetDownloadLinkForTransactionHistoryAsync endpoint
+    * Added SpotApi.ExchangeData.GetTradingDayTickerAsync endpoint
+    * Added SpotApi.ExchangeData.GetTradingDayTickersAsync endpoint
+    * Added computeFeeRates parameter to SpotApi.Trading.PlaceTestOrderAsync
+    * Updated SpotApi.Trading.PlaceTestOrderAsync response
+    * Updated broker reference setting
+    * Updated CryptoExchange.Net to 7.3.2 fixing issue which caused some endpoints with specific rate limits to fail
+
+* Version 9.9.1 - 19 Apr 2024
+    * Fixed Start/KeepAlive/Stop UserStream operations returning error
+
+* Version 9.9.0 - 18 Apr 2024
+    * Updated CryptoExchange.Net to 7.3.1, see https://github.com/JKorf/CryptoExchange.Net?tab=readme-ov-file#release-notes for release notes
+	* Re-implemented client side rate limiting
+    * Added handling of RetryAfter response for both rest and socket API
+    * Added omitZeroBalances parameter to SpotApi.Account.GetAccountInfoAsync
+    * Added new PlaceOcoOrderListAsync as replacement for deprecated PlaceOcoOrderAsync endpoint
+    * Added listenKeyExpired event handler for Spot websocket user data subscription
+    * Added OTOAllowed to SpotApi.ExchangeData.GetExchangeInfoAsync symbol response model
+    * Moved GetTradeFeeAsync from SpotApi.ExchangeData to SpotApi.Account
+    * Changed WebCallResult<object> responses to WebCallResult
+    * Removed deprecated endpoints
+
+* Version 9.8.1 - 03 Apr 2024
+    * Added SpotApi.Account.GetWalletBalancesAsync endpoint
+    * Fixed SpotApi.Account.GetMarginLoansAsync isolatedSymbol parameter not getting send
+    * Removed pre-send symbol validation
+
+* Version 9.8.0 - 01 Apr 2024
+    * Added SpotApi.ExchangeData.GetDelistScheduleAsync endpoint
+    * Added UsdFuturesApi.Account.GetOrderRateLimitAsync endpoint
+    * Added UsdFuturesApi.ExchangeData.GetBasisAsync endpoint
+    * Updated Spot Margin endpoints
+    * Updated UsdFuturesApi.ExchangeData.GetPricesAsync endpoint to V2
+    * Updated UsdFuturesApi.Trading.PlaceOrderAsync parameters
+    * Removed deprecated BSwap endpoints
+
+* Version 9.7.1 - 24 Mar 2024
+	* Updated CryptoExchange.Net to 7.2.0, see https://github.com/JKorf/CryptoExchange.Net?tab=readme-ov-file#release-notes for release notes
+
+* Version 9.7.0 - 16 Mar 2024
+    * Updated CryptoExchange.Net to 7.1.0, see https://github.com/JKorf/CryptoExchange.Net?tab=readme-ov-file#release-notes for release notes
+    * Added websocket max message size to prevent timeouts and weird behavior when sending large requests
+    * Updated WebCallResult<object> return endpoints to WebCallResult return
+    * Added parameter on futures stream trades stream for ignoring non trade updates
+
 * Version 9.6.1 - 29 Feb 2024
     * Fix for user data websocket streams subscriptions
 

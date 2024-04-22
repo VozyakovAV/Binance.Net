@@ -1,6 +1,4 @@
 ﻿using Binance.Net.Enums;
-using CryptoExchange.Net.Converters;
-using System.Collections.Generic;
 
 namespace Binance.Net.Converters
 {
@@ -16,6 +14,7 @@ namespace Binance.Net.Converters
             new KeyValuePair<UniversalTransferType, string>(UniversalTransferType.MainToCoinFutures, "MAIN_CMFUTURE"),
             new KeyValuePair<UniversalTransferType, string>(UniversalTransferType.MainToMargin, "MAIN_MARGIN"),
             new KeyValuePair<UniversalTransferType, string>(UniversalTransferType.MainToMining, "MAIN_MINING"),
+            new KeyValuePair<UniversalTransferType, string>(UniversalTransferType.MainToIsolatedMargin, "MAIN_ISOLATED_MARGIN"),
 
             new KeyValuePair<UniversalTransferType, string>(UniversalTransferType.FundingToMain, "FUNDING_MAIN"),
             new KeyValuePair<UniversalTransferType, string>(UniversalTransferType.FundingToUsdFutures, "FUNDING_UMFUTURE"),
@@ -30,6 +29,7 @@ namespace Binance.Net.Converters
 
             new KeyValuePair<UniversalTransferType, string>(UniversalTransferType.MarginToIsolatedMargin, "MARGIN_ISOLATEDMARGIN"),
             new KeyValuePair<UniversalTransferType, string>(UniversalTransferType.IsolatedMarginToMargin, "ISOLATEDMARGIN_MARGIN"),
+            new KeyValuePair<UniversalTransferType, string>(UniversalTransferType.IsolatedMarginToMain, "ISOLATED_MARGIN_MAIN"),
 
             new KeyValuePair<UniversalTransferType, string>(UniversalTransferType.MarginToMain, "MARGIN_MAIN"),
             new KeyValuePair<UniversalTransferType, string>(UniversalTransferType.MarginToUsdFutures, "MARGIN_UMFUTURE"),

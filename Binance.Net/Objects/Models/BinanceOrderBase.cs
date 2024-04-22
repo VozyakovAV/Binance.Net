@@ -1,8 +1,5 @@
-﻿using System;
-using Binance.Net.Converters;
+﻿using Binance.Net.Converters;
 using Binance.Net.Enums;
-using CryptoExchange.Net.Converters;
-using Newtonsoft.Json;
 
 namespace Binance.Net.Objects.Models
 {
@@ -115,6 +112,12 @@ namespace Binance.Net.Objects.Models
         /// </summary>
         [JsonConverter(typeof(DateTimeConverter))]
         public DateTime? UpdateTime { get; set; }
+        /// <summary>
+        /// When the order started working
+        /// </summary>
+        [JsonConverter(typeof(DateTimeConverter))]
+        [JsonProperty("workingTime")]
+        public DateTime? WorkingTime { get; set; }
         /// <summary>
         /// Is working
         /// </summary>

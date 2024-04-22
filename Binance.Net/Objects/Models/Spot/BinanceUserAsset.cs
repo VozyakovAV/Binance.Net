@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-
-namespace Binance.Net.Objects.Models.Spot
+﻿namespace Binance.Net.Objects.Models.Spot
 {
     /// <summary>
     /// Information about an asset for a user
@@ -114,10 +110,6 @@ namespace Binance.Net.Objects.Models.Spot
         /// Network
         /// </summary>
         public string Network { get; set; } = string.Empty;
-        /// <summary>
-        /// Reset address status
-        /// </summary>
-        public bool ResetAddressStatus { get; set; }
         /// <summary>
         /// Tips
         /// </summary>

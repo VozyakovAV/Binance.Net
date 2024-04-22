@@ -1,26 +1,15 @@
 ﻿using Binance.Net.Converters;
 using Binance.Net.Enums;
 using Binance.Net.Objects;
-using CryptoExchange.Net;
-using CryptoExchange.Net.Authentication;
-using CryptoExchange.Net.Objects;
-using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using Binance.Net.Objects.Internal;
 using Binance.Net.Objects.Models.Spot;
 using Binance.Net.Interfaces.Clients.SpotApi;
 using CryptoExchange.Net.CommonObjects;
 using CryptoExchange.Net.Interfaces.CommonClients;
-using CryptoExchange.Net.Converters;
 using Binance.Net.Objects.Options;
-using Binance.Net.ExtensionMethods;
+using CryptoExchange.Net.Converters.MessageParsing;
+using CryptoExchange.Net.Clients;
+using CryptoExchange.Net.RateLimiting.Interfaces;
 
 namespace Binance.Net.Clients.SpotApi
 {
@@ -32,6 +21,7 @@ namespace Binance.Net.Clients.SpotApi
         public new BinanceRestApiOptions ApiOptions => (BinanceRestApiOptions)base.ApiOptions;
         /// <inheritdoc />
         public new BinanceRestOptions ClientOptions => (BinanceRestOptions)base.ClientOptions;
+
 
         internal BinanceExchangeInfo? _exchangeInfo;
         internal DateTime? _lastExchangeInfoUpdate;
@@ -69,9 +59,9 @@ namespace Binance.Net.Clients.SpotApi
             ExchangeData = new BinanceRestClientSpotApiExchangeData(logger, this);
             Trading = new BinanceRestClientSpotApiTrading(logger, this);
 
-            requestBodyEmptyContent = "";
-            requestBodyFormat = RequestBodyFormat.FormData;
-            arraySerialization = ArrayParametersSerialization.MultipleValues;
+            RequestBodyEmptyContent = "";
+            RequestBodyFormat = RequestBodyFormat.FormData;
+            ArraySerialization = ArrayParametersSerialization.MultipleValues;
 
             _brokerId = !string.IsNullOrEmpty(options.SpotOptions.BrokerId) ? options.SpotOptions.BrokerId! : "x-VICEW9VV";
         }
@@ -104,10 +94,9 @@ namespace Binance.Net.Clients.SpotApi
             bool? autoRepayAtCancel = null,
             int? receiveWindow = null,
             int weight = 1,
+            IRateLimitGate? gate = null,
             CancellationToken ct = default)
         {
-            symbol.ValidateBinanceSymbol();
-
             if (quoteQuantity != null && type != SpotOrderType.Market)
                 throw new ArgumentException("quoteQuantity is only valid for market orders");
 
@@ -151,8 +140,10 @@ namespace Binance.Net.Clients.SpotApi
             parameters.AddOptionalParameter("autoRepayAtCancel", autoRepayAtCancel);
             parameters.AddOptionalParameter("recvWindow", receiveWindow?.ToString(CultureInfo.InvariantCulture) ?? ClientOptions.ReceiveWindow.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
 
-            return await SendRequestInternal<BinancePlacedOrder>(uri, HttpMethod.Post, ct, parameters, true, weight: weight).ConfigureAwait(false);
+            return await SendRequestInternal<BinancePlacedOrder>(uri, HttpMethod.Post, ct, parameters, true, weight: weight, gate: gate).ConfigureAwait(false);
         }
+
+        internal Uri GetUri(string path) => new Uri(BaseAddress.AppendPath(path));
 
         internal Uri GetUrl(string endpoint, string api, string? version = null)
         {
@@ -180,9 +171,9 @@ namespace Binance.Net.Clients.SpotApi
 
         internal async Task<WebCallResult<T>> SendRequestInternal<T>(Uri uri, HttpMethod method, CancellationToken cancellationToken,
             Dictionary<string, object>? parameters = null, bool signed = false, HttpMethodParameterPosition? postPosition = null,
-            ArrayParametersSerialization? arraySerialization = null, int weight = 1, bool ignoreRateLimit = false) where T : class
+            ArrayParametersSerialization? arraySerialization = null, int weight = 1, IRateLimitGate? gate = null) where T : class
         {
-            var result = await SendRequestAsync<T>(uri, method, cancellationToken, parameters, signed, null, postPosition, arraySerialization, weight, ignoreRatelimit: ignoreRateLimit).ConfigureAwait(false);
+            var result = await SendRequestAsync<T>(uri, method, cancellationToken, parameters, signed, null, postPosition, arraySerialization, weight, gate: gate).ConfigureAwait(false);
             if (!result && result.Error!.Code == -1021 && (ApiOptions.AutoTimestamp ?? ClientOptions.AutoTimestamp))
             {
                 _logger.Log(LogLevel.Debug, "Received Invalid Timestamp error, triggering new time sync");
@@ -191,11 +182,9 @@ namespace Binance.Net.Clients.SpotApi
             return result;                    
         }
 
-        internal async Task<WebCallResult> SendRequestInternal(Uri uri, HttpMethod method, CancellationToken cancellationToken,
-            Dictionary<string, object>? parameters = null, bool signed = false, HttpMethodParameterPosition? postPosition = null,
-            ArrayParametersSerialization? arraySerialization = null, int weight = 1, bool ignoreRateLimit = false)
+        internal async Task<WebCallResult> SendAsync(RequestDefinition definition, ParameterCollection? parameters, CancellationToken cancellationToken, int? weight = null)
         {
-            var result = await SendRequestAsync(uri, method, cancellationToken, parameters, signed, null, postPosition, arraySerialization, weight, ignoreRatelimit: ignoreRateLimit).ConfigureAwait(false);
+            var result = await base.SendAsync(BaseAddress, definition, parameters, cancellationToken, null, weight).ConfigureAwait(false);
             if (!result && result.Error!.Code == -1021 && (ApiOptions.AutoTimestamp ?? ClientOptions.AutoTimestamp))
             {
                 _logger.Log(LogLevel.Debug, "Received Invalid Timestamp error, triggering new time sync");
@@ -203,6 +192,21 @@ namespace Binance.Net.Clients.SpotApi
             }
             return result;
         }
+
+        internal Task<WebCallResult<T>> SendAsync<T>(RequestDefinition definition, ParameterCollection? parameters, CancellationToken cancellationToken, int? weight = null) where T : class
+            => SendToAddressAsync<T>(BaseAddress, definition, parameters, cancellationToken, weight);
+
+        internal async Task<WebCallResult<T>> SendToAddressAsync<T>(string baseAddress, RequestDefinition definition, ParameterCollection? parameters, CancellationToken cancellationToken, int? weight = null) where T : class
+        {
+            var result = await base.SendAsync<T>(baseAddress, definition, parameters, cancellationToken, null, weight).ConfigureAwait(false);
+            if (!result && result.Error!.Code == -1021 && (ApiOptions.AutoTimestamp ?? ClientOptions.AutoTimestamp))
+            {
+                _logger.Log(LogLevel.Debug, "Received Invalid Timestamp error, triggering new time sync");
+                _timeSyncState.LastSyncTime = DateTime.MinValue;
+            }
+            return result;
+        }
+
         #endregion
 
         /// <inheritdoc />
@@ -555,28 +559,26 @@ namespace Binance.Net.Clients.SpotApi
         }
 
         /// <inheritdoc />
-        protected override Error ParseErrorResponse(int httpStatusCode, IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders, string data)
+        protected override Error ParseErrorResponse(int httpStatusCode, IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders, IMessageAccessor accessor)
         {
-            var errorData = ValidateJson(data);
-            if (!errorData)
-                return new ServerError(data);
+            if (!accessor.IsJson)
+                return new ServerError(accessor.GetOriginalString());
 
-            if (!errorData.Data.HasValues)
-                return new ServerError(errorData.Data.ToString());
+            var code = accessor.GetValue<int?>(MessagePath.Get().Property("code"));
+            var msg = accessor.GetValue<string>(MessagePath.Get().Property("msg"));
+            if (msg == null)
+                return new ServerError(accessor.GetOriginalString());
 
-            if (errorData.Data["msg"] == null && errorData.Data["code"] == null)
-                return new ServerError(errorData.Data.ToString());
+            if (code == null)
+                return new ServerError(msg);
 
-            if (errorData.Data["msg"] != null && errorData.Data["code"] == null)
-                return new ServerError((string)errorData.Data["msg"]!);
-
-            return new ServerError((int)errorData.Data["code"]!, (string)errorData.Data["msg"]!);
+            return new ServerError(code.Value, msg);
         }
 
         /// <inheritdoc />
-        protected override Error ParseRateLimitResponse(int httpStatusCode, IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders, string data)
+        protected override ServerRateLimitError ParseRateLimitResponse(int httpStatusCode, IEnumerable<KeyValuePair<string, IEnumerable<string>>> responseHeaders, IMessageAccessor accessor)
         {
-            var error = GetRateLimitError(data);
+            var error = GetRateLimitError(accessor);
             var retryAfterHeader = responseHeaders.SingleOrDefault(r => r.Key.Equals("Retry-After", StringComparison.InvariantCultureIgnoreCase));
             if (retryAfterHeader.Value?.Any() != true)
                 return error;
@@ -585,26 +587,30 @@ namespace Binance.Net.Clients.SpotApi
             if (!int.TryParse(value, out var seconds))
                 return error;
 
+            if (seconds == 0)
+            {
+                var now = DateTime.UtcNow;
+                seconds = (int)(new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0, DateTimeKind.Utc).AddMinutes(1) - now).TotalSeconds + 1; 
+            }
+
             error.RetryAfter = DateTime.UtcNow.AddSeconds(seconds);
             return error;
         }
 
-        private BinanceRateLimitError GetRateLimitError(string data)
+        private BinanceRateLimitError GetRateLimitError(IMessageAccessor accessor)
         {
-            var errorData = ValidateJson(data);
-            if (!errorData)
-                return new BinanceRateLimitError(data);
+            if (!accessor.IsJson)
+                return new BinanceRateLimitError(accessor.GetOriginalString());
 
-            if (!errorData.Data.HasValues)
-                return new BinanceRateLimitError(errorData.Data.ToString());
+            var code = accessor.GetValue<int?>(MessagePath.Get().Property("code"));
+            var msg = accessor.GetValue<string>(MessagePath.Get().Property("msg"));
+            if (msg == null)
+                return new BinanceRateLimitError(accessor.GetOriginalString());
 
-            if (errorData.Data["msg"] == null && errorData.Data["code"] == null)
-                return new BinanceRateLimitError(errorData.Data.ToString());
+            if (code == null)
+                return new BinanceRateLimitError(msg);
 
-            if (errorData.Data["msg"] != null && errorData.Data["code"] == null)
-                return new BinanceRateLimitError((string)errorData.Data["msg"]!);
-
-            return new BinanceRateLimitError((int)errorData.Data["code"]!, (string)errorData.Data["msg"]!, null);
+            return new BinanceRateLimitError(code.Value, msg, null);
         }
     }
 }
